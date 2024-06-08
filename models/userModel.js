@@ -1,4 +1,3 @@
-const { profile } = require("console");
 const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -15,6 +14,9 @@ const userSchema = new mongoose.Schema({
     { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
   ],
   tweets: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tweet", default: [] }],
+  likedTweets: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Tweet", default: [] },
+  ],
 });
 const User = mongoose.model("User", userSchema);
 module.exports = User;

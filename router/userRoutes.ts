@@ -1,9 +1,12 @@
 const express=require('express');
 const router=express.Router();
+const multer=require('multer');
 const UserController=require('../controller/userController.ts');
-
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 router.post('/register',UserController.register);
 router.post('/login',UserController.login);
 router.post('/follow/:personId',UserController.follow);
 router.post('/unfollow/:personId', UserController.unfollow);
+router.post('/uploadProfilePicture',upload.single('image'),UserController.uploadProfilePicture);
 module.exports=router;

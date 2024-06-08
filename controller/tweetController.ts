@@ -1,4 +1,6 @@
 const Tweet = require('../models/tweetModel');
+const User = require('../models/userModel');
+const Comment = require('../models/commentModel');
 const cloudinary = require('cloudinary').v2;
 const dotenv = require("dotenv");
 // const User = require('../models/userModel');
@@ -25,10 +27,17 @@ module.exports = class TweetController {
 
                 Tweet.create({ content: text, contentUrl: result.secure_url, userId, tweetType: "image" })
                     .then(tweet => {
-                        return res.status(201).json({ message: "Tweet created successfully", tweet });
+                        User.findByIdAndUpdate(userId, { $push: { tweets: tweet._id } }).then(user => {
+                            if (!user) {
+                                return res.status(400).json({ message: "User not found" });
+                            }
+                        })
+                        return res.status(200).json({ message: "Posted Successfully", tweet });
+
                     })
                     .catch(err => {
                         console.error(err);
+                        
                         return res.status(500).json({ message: "Internal Server Error" });
                     });
             });
@@ -37,7 +46,12 @@ module.exports = class TweetController {
         } else if(type==="text"){ {
             Tweet.create({ content: text, userId, tweetType: "text" })
                 .then(tweet => {
-                    return res.status(201).json({ message: "Posted Successfully", tweet });
+                    User.findByIdAndUpdate(userId, { $push: { tweets: tweet._id } }).then(user => {
+                        if (!user) {
+                            return res.status(400).json({ message: "User not found" });
+                        }
+                    })
+                    return res.status(200).json({ message: "Posted Successfully", tweet });
                 })
                 .catch(err => {
                     console.error(err);
@@ -46,4 +60,132 @@ module.exports = class TweetController {
         }
     }
 }
+static likeTweet(req, res) {
+    const { tweetId } = req.params;
+    const userId = req.body.userId;
+    if (!tweetId) {
+        return res.status(400).json({ message: "Please provide tweetId" });
+    }
+    Tweet.findByIdAndUpdate(tweetId, { $push: { likes: userId } }).then(tweet => {
+        if (!tweet) {
+            return res.status(400).json({ message: "Tweet not found" });
+        }
+        User.findByIdAndUpdate(userId, { $push: { likedTweets: tweetId } }).then(user => {
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+            return res.status(200).json({ message: "Liked Successfully" });
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })
+    }).catch(err => {
+        return res.status(500).json({ message: "Internal Server Error" });
+    })
+}
+    static unlikeTweet(req, res) {
+        const { tweetId } = req.params;
+        const userId = req.body.userId;
+        if (!tweetId) {
+            return res.status(400).json({ message: "Please provide tweetId" });
+        }
+        Tweet.findByIdAndUpdate(tweetId, { $pull: { likes: userId } }).then(tweet => {
+            if (!tweet) {
+                return res.status(400).json({ message: "Tweet not found" });
+            }
+            User.findByIdAndUpdate(userId, { $pull: { likedTweets: tweetId } }).then(user => {
+                if (!user) {
+                    return res.status(400).json({ message: "User not found" });
+                }
+                return res.status(200).json({ message: "Unliked Successfully" });
+            }).catch(err => {
+                return res.status(500).json({ message: "Internal Server Error" });
+            })
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })
+    }
+    static commentTweet(req, res) {
+        const { tweetId } = req.params;
+        const { text, userId } = req.body;
+        if (!tweetId || !text || !userId) {
+            return res.status(400).json({ message: "Please provide all the fields" });
+        }
+        Comment.create({ content:text, userId ,tweetId}).then(comment => {
+            Tweet.findByIdAndUpdate(tweetId, { $push: { comments: comment._id  } }).then(tweet => {
+                if (!tweet) {
+                    return res.status(400).json({ message: "Tweet not found" });
+                }
+                return res.status(200).json({ message: "Commented Successfully" });
+            }).catch(err => {
+                console.log(err);
+                return res.status(500).json({ message: "Internal Server Error" });
+            })
+
+        }).catch(err => {});
+      
+    }
+    static updateTweet(req, res) {
+        const { tweetId } = req.params;
+        const { text ,userId } = req.body;
+        if (!tweetId || !text) {
+            return res.status(400).json({ message: "Please provide all the fields" });
+        }
+        Tweet.findById(tweetId).then(tweet => {
+            if (!tweet) {
+                return res.status(400).json({ message: "Tweet not found" });
+            }
+            if (tweet.userId != userId) {
+                console.log(tweet.userId.toString(),"  ", userId)
+                return res.status(401).json({ message: "You are not authorized to update this tweet" });
+            }
+            else{
+                Tweet.findByIdAndUpdate(tweetId, { content: text }).then(tweet => {
+                    if (!tweet) {
+                        return res.status(400).json({ message: "Tweet not found" });
+                    }
+                    return res.status(200).json({ message: "Updated Successfully" });
+                }).catch(err => {
+                    return res.status(500).json({ message: "Internal Server Error" });
+                })
+            }
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        
+        })
+       
+    }
+    static deleteTweet(req, res) {
+        const { tweetId } = req.params;
+        const userId = req.body.userId;
+        if (!tweetId) {
+            return res.status(400).json({ message: "Please provide tweetId" });
+        }
+        Tweet.findById(tweetId).then(tweet => {
+            if (!tweet) {
+                return res.status(400).json({ message: "Tweet not found" });
+            }
+            if (tweet.userId != userId) {
+                return res.status(401).json({ message: "You are not authorized to delete this tweet" });
+            }
+            else {
+                Tweet.findByIdAndDelete(tweetId).then(tweet => {
+                    if (!tweet) {
+                        return res.status(400).json({ message: "Tweet not found" });
+                    }
+                    User.findByIdAndUpdate(userId, { $pull: { tweets: tweetId } }).then(user => {
+                        if (!user) {
+                            return res.status(400).json({ message: "User not found" });
+                        }
+                        return res.status(200).json({ message: "Deleted Successfully" });
+                    }).catch(err => {
+                        return res.status(500).json({ message: "Internal Server Error" });
+                    })
+                }).catch(err => {
+                    return res.status(500).json({ message: "Internal Server Error" });
+                })
+            }
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })      
+    }
 }

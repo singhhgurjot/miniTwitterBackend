@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/userModel.js');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const cloudinary = require('cloudinary').v2;
 dotenv.config();
 
 module.exports = class UserController {
@@ -95,5 +96,28 @@ User.findByIdAndUpdate(userId, { $pull: { following: personId } }).then(user => 
         return res.status(500).json({ message: 'Internal Server Error' });
     })  
 }
-
+static uploadProfilePicture(req, res) {
+    const {userId}=req.body;
+    console.log("Called" ,userId);
+    const profilePicture=req.file;
+    if(!userId){
+        return res.status(400).json({message:'Please provide userId'});
+    }
+    if(!profilePicture){
+        return res.status(400).json({message:'Please provide profilePicture'});
+    }
+    const uploadStream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ message: "Internal Server Error" });
+        }
+        User.findByIdAndUpdate(userId, { profilePic: result.secure_url }).then(user => {
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+            return res.status(200).json({ message: "Profile Picture Uploaded Successfully", result:result.secure_url });
+        }).catch(err => {   });
+    });
+    uploadStream.end(req.file.buffer);
+}
 }
