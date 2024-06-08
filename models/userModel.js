@@ -16,3 +16,5 @@ const userSchema = new mongoose.Schema({
   ],
   tweets: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tweet", default: [] }],
 });
+const User = mongoose.model("User", userSchema);
+module.exports = User;
