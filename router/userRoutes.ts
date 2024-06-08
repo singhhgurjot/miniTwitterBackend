@@ -9,4 +9,7 @@ router.post('/login',UserController.login);
 router.post('/follow/:personId',UserController.follow);
 router.post('/unfollow/:personId', UserController.unfollow);
 router.post('/uploadProfilePicture',upload.single('image'),UserController.uploadProfilePicture);
+router.get('/profile/:userId',UserController.getProfile);
+router.get("/getFollowers/:userId",UserController.getFollowers);
+router.get("/getFollowing/:userId",UserController.getFollowing);
 module.exports=router;
