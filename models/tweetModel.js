@@ -28,7 +28,4 @@ const commentSchema = new mongoose.Schema({
   content: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
-module.exports = {
-  Tweet: mongoose.model("Tweet", tweetSchema),
-  Comment: mongoose.model("Comment", commentSchema),
-};
+module.exports = mongoose.model("Tweet", tweetSchema);
