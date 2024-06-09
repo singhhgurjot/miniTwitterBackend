@@ -203,7 +203,7 @@ static likeTweet(req, res) {
             }
             User.find({ _id: { $in: user.following } }).then(following => {
                 let followingIds = following.map(follow => follow._id);
-                Tweet.find({ userId: { $in: followingIds } }).populate("userId",("-password")).then(tweets => {
+                Tweet.find({ userId: { $in: followingIds } }).populate("userId", ("-password")).sort({ createdAt: -1 }).then(tweets => {
                     return res.status(200).json({ tweets });
                 }).catch(err => {
                     return res.status(500).json({ message: "Internal Server Error" });
