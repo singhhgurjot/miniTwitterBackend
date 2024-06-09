@@ -46,6 +46,7 @@ module.exports = class UserController {
         })
     }
     static follow(req, res) {
+        console.log("Called");
         const { personId } = req.params;
         const userId = req.body.userId;
         if (!personId) {
@@ -70,7 +71,10 @@ module.exports = class UserController {
         })  
 }
 static unfollow(req, res) {
+    console.log("Unfollow");
+    
     const { personId } = req.params;
+
     const userId = req.body.userId;
     if (!personId) {
         return res.status(400).json({ message: 'Please provide personId' });  
@@ -171,5 +175,16 @@ static getOwnProfile(req, res) {
 else{
     return res.status(200).json({ user });
 }
+}
+static search(req,res){
+    const {query}=req.body;
+    if(!query){
+        return res.status(400).json({message:'Please provide query'});
+    }
+    User.find({$or:[{name:{$regex:query,$options:'i'}},{username:{$regex:query,$options:'i'}}]},{password:0}).then(users=>{
+        return res.status(200).json({users});
+    }).catch(err=>{
+        return res.status(500).json({message:'Internal Server Error'});
+    })
 }
 }
