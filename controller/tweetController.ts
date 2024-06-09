@@ -3,7 +3,6 @@ const User = require('../models/userModel');
 const Comment = require('../models/commentModel');
 const cloudinary = require('cloudinary').v2;
 const dotenv = require("dotenv");
-// const User = require('../models/userModel');
 dotenv.config();
 cloudinary.config({
     cloud_name: process.env.CLOUD_CLOUD_NAME,
@@ -15,10 +14,15 @@ module.exports = class TweetController {
 
     static createTweet(req, res) {
         const { text, type, userId } = req.body;
-        if (type === "image") {
-            console.log(text);
-            console.log(req.file);
+        console.log("Create Tweet");
+        if (type === "image") { 
+            console.log("With Image");
+            console.log("Text", text);
+            if(!text){
+                return res.status(400).json({ message: "Please provide text" });
+            }
 
+            console.log(req.file);
             const uploadStream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
                 if (error) {
                     console.error(error);
@@ -184,6 +188,29 @@ static likeTweet(req, res) {
                     return res.status(500).json({ message: "Internal Server Error" });
                 })
             }
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })      
+    }
+    static getFollowersTweets(req, res) {
+        const userId = req.body.userId
+        if (!userId) {
+            return res.status(400).json({ message: "Please provide userId" });
+        }
+        User.findById(userId).then(user => {
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+            User.find({ _id: { $in: user.following } }).then(following => {
+                let followingIds = following.map(follow => follow._id);
+                Tweet.find({ userId: { $in: followingIds } }).populate("userId",("-password")).then(tweets => {
+                    return res.status(200).json({ tweets });
+                }).catch(err => {
+                    return res.status(500).json({ message: "Internal Server Error" });
+                })
+            }).catch(err => {
+                return res.status(500).json({ message: "Internal Server Error" });
+            })
         }).catch(err => {
             return res.status(500).json({ message: "Internal Server Error" });
         })      

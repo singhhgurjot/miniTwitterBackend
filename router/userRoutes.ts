@@ -4,6 +4,7 @@ const multer=require('multer');
 const UserController=require('../controller/userController.ts');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+const checkAuth=require('../middlewares/checkAuth');
 router.post('/register',UserController.register);
 router.post('/login',UserController.login);
 router.post('/follow/:personId',UserController.follow);
@@ -12,4 +13,5 @@ router.post('/uploadProfilePicture',upload.single('image'),UserController.upload
 router.get('/profile/:userId',UserController.getProfile);
 router.get("/getFollowers/:userId",UserController.getFollowers);
 router.get("/getFollowing/:userId",UserController.getFollowing);
+router.get("/getOwnProfile",checkAuth,UserController.getOwnProfile);
 module.exports=router;

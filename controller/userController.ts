@@ -162,4 +162,14 @@ User.findById(userId).populate('following',"-password").then(user => {
         return res.status(500).json({ message: 'Internal Server Error' });
     })  
 }
+static getOwnProfile(req, res) {
+    const user = req.body.user;
+    
+    if (!user) {
+        return res.status(400).json({ message: 'Please provide userId' });
+}
+else{
+    return res.status(200).json({ user });
+}
+}
 }
