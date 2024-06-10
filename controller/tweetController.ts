@@ -131,6 +131,7 @@ static likeTweet(req, res) {
     static updateTweet(req, res) {
         const { tweetId } = req.params;
         const { text ,userId } = req.body;
+        console.log(userId);
         if (!tweetId || !text) {
             return res.status(400).json({ message: "Please provide all the fields" });
         }
@@ -214,5 +215,77 @@ static likeTweet(req, res) {
         }).catch(err => {
             return res.status(500).json({ message: "Internal Server Error" });
         })      
+    }
+    static bookmarkTweet(req, res) {
+        const { tweetId } = req.params;
+        const userId = req.body.userId;
+        if (!tweetId) {
+            return res.status(400).json({ message: "Please provide tweetId" });
+        }
+        User.findByIdAndUpdate(userId, { $push: { bookmarks: tweetId } }).then(user => {
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+            return res.status(200).json({ message: "Bookmarked Successfully" });
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })
+    }
+    static unbookmarkTweet(req, res) {
+        const { tweetId } = req.params;
+        const userId = req.body.userId;
+        if (!tweetId) {
+            return res.status(400).json({ message: "Please provide tweetId" });
+        }
+        User.findByIdAndUpdate(userId, { $pull: { bookmarks: tweetId } }).then(user => {
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+            return res.status(200).json({ message: "Unbookmarked Successfully" });
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })
+    }
+    static getBookmarks(req, res) {
+        const userId = req.body.userId;
+        if (!userId) {
+            return res.status(400).json({ message: "Please provide userId" });
+        }
+        User.findById(userId).populate({
+            path:"bookmarks",
+            populate:{
+                path:"userId",
+                select:"-password"
+            }
+        }).then(user => {
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+            console.log(user);
+            
+            return res.status(200).json({ bookmarks: user.bookmarks });
+        }).catch(err => {
+            console.log(err);
+            return res.status(500).json({ message: "Internal Server Error" });
+        })
+    }
+    static getTweets(req, res) {
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ message: "Please provide userId" });
+        }
+        Tweet.find({ userId }).populate("userId", ("-password")).sort({ createdAt: -1 }).then(tweets => {
+            return res.status(200).json({ tweets });
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })
+
+    }
+    static getAllTweets(req, res) {
+        Tweet.find({}).populate("userId", ("-password")).sort({ createdAt: -1 }).then(tweets => {
+            return res.status(200).json({ tweets });
+        }).catch(err => {
+            return res.status(500).json({ message: "Internal Server Error" });
+        })
     }
 }

@@ -14,7 +14,7 @@ app.listen(process.env.PORT, () => {
   }
 });
 mongoose.connect(process.env.MONGO_URL).then((db) => {
-  console.log("Connected To DB Successfully");
+  console.log("Connected To   DB Successfully");
 });
 app.use("/api/users", userRoute);
 app.use("/api/tweets", tweetRoute);

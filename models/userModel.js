@@ -17,6 +17,9 @@ const userSchema = new mongoose.Schema({
   likedTweets: [
     { type: mongoose.Schema.Types.ObjectId, ref: "Tweet", default: [] },
   ],
+  bookmarks: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Tweet", default: [] },
+  ],
 });
 const User = mongoose.model("User", userSchema);
 module.exports = User;

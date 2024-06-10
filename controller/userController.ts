@@ -187,4 +187,20 @@ static search(req,res){
         return res.status(500).json({message:'Internal Server Error'});
     })
 }
+
+static updateProfile(req,res){
+    const {name,bio}=req.body;
+    console.log(name, bio);
+    const userId=req.body.userId;
+    if(!userId){
+        return res.status(400).json({message:'Please provide userId'});
+    }
+    User.findByIdAndUpdate(userId,{name,bio}).then(user=>{
+    
+        if(!user){
+            return res.status(400).json({message:'User not found'});
+        }
+        return res.status(200).json({message:'Profile updated successfully'});
+    })
+}
 }

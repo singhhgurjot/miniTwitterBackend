@@ -14,5 +14,7 @@ router.get('/profile/:userId',UserController.getProfile);
 router.get("/getFollowers/:userId",UserController.getFollowers);
 router.get("/getFollowing/:userId",UserController.getFollowing);
 router.get("/getOwnProfile",checkAuth,UserController.getOwnProfile);
+router.post("/updateProfile",checkAuth,UserController.updateProfile);
+
 router.post("/search",checkAuth,UserController.search);
 module.exports=router;
